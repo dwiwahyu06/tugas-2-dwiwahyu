@@ -5,9 +5,8 @@ const app = express();
 
 app.use(express.json());
 
-// ===== MOVIE ROUTES ===== //
+//film
 
-// Get all movies
 app.get("/movie", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM movie");
@@ -17,7 +16,37 @@ app.get("/movie", async (req, res) => {
   }
 });
 
-// Add a new movie
+
+
+// Update film
+app.put("/movie/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, genre, sinopsis, language } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE movie SET title = $1, genre = $2, sinopsis = $3, language = $4 WHERE id = $5 RETURNING *",
+      [title, genre, sinopsis, language, id]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// hapus film
+app.delete("/movie/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query("DELETE FROM movie WHERE id = $1", [id]);
+    res.status(200).send(`Movie dengan ID ${id} berhasil dihapus.`);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// tambah film
 app.post("/create-movie", async (req, res) => {
   const { title, genre, sinopsis, language } = req.body;
 
@@ -40,35 +69,7 @@ app.post("/create-movie", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });  }
 });
 
-// Update a movie
-app.put("/movie/:id", async (req, res) => {
-  const { id } = req.params;
-  const { title, genre, sinopsis, language } = req.body;
-
-  try {
-    const result = await pool.query(
-      "UPDATE movie SET title = $1, genre = $2, sinopsis = $3, language = $4 WHERE id = $5 RETURNING *",
-      [title, genre, sinopsis, language, id]
-    );
-    res.status(200).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-// Delete a movie
-app.delete("/movie/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await pool.query("DELETE FROM movie WHERE id = $1", [id]);
-    res.status(200).send(`Movie dengan ID ${id} berhasil dihapus.`);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-// ===== USER REGISTRATION ===== //
+// user register
 
 app.post("/users/register", async (req, res) => {
   const { name, username, password } = req.body;
@@ -104,7 +105,7 @@ app.post("/users/register", async (req, res) => {
   }
 });
 
-// ===== USER LOGIN ===== //
+// user login
 
 app.post("/users/login", async (req, res) => {
   const { username, password } = req.body;
